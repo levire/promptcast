@@ -16,3 +16,5 @@ jobs:
           path: .build
           key: spm-${{ runner.os }}-${{ hashFiles('Package.swift', 'Package.resolved') }}
       - run: make check
+        env:
+          PROMPTCAST_E2E_SKIP_TRANSCRIPT: "1"
