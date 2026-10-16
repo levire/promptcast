@@ -1,13 +1,15 @@
 # ScreenInk agent guide
 
-ScreenInk is a macOS 26 menu-bar app. ⌃⌥R starts a recording of the display under the mouse, the microphone, and mouse clicks. ⌃⌥R again stops it and writes a folder in `~/ScreenInk/<timestamp>/` containing `report.md` (transcript split at each click, with before/after screenshots), then copies the report path to the clipboard.
+ScreenInk is a macOS 26 menu-bar app. A global shortcut (default ⌃⌥R, set in Settings) starts a recording of the display under the mouse, the microphone, and mouse clicks. The shortcut or a click on the overlay pill stops it and writes a folder in `~/ScreenInk/<timestamp>/` containing `report.md` (transcript split at each click, with before/after screenshots), then copies the report path to the clipboard.
 
 ## Layout
 
 | Path | Contents |
 |------|----------|
-| `Sources/ScreenInkCore/` | Pure logic: models (`Session`, `Click`, `Segment`, `Display`), coordinate math, frame timing, markdown. No AppKit, no I/O. All unit tests target this. |
-| `Sources/ScreenInk/main.swift` | App delegate, menu bar item, Carbon hotkey, `--package` CLI mode. |
+| `Sources/ScreenInkCore/` | Pure logic: models (`Session`, `Click`, `Segment`, `Display`, `Shortcut`), coordinate math, frame timing, markdown. No AppKit, no I/O. All unit tests target this. |
+| `Sources/ScreenInk/main.swift` | App delegate, menu bar item, global shortcut (`Hotkey`: Carbon for key combos, event tap for a lone modifier), `--package` CLI mode. |
+| `Sources/ScreenInk/Overlay.swift` | Floating recording pill (level meter, timer, click to stop). |
+| `Sources/ScreenInk/SettingsView.swift` | Settings window: grouped `Form`, one `Section` per area. New settings go here, persisted with `@AppStorage`. |
 | `Sources/ScreenInk/Recorder.swift` | ScreenCaptureKit video (`SCRecordingOutput`), `AVAudioRecorder` audio, global click monitor. Writes `session.json`. |
 | `Sources/ScreenInk/Packager.swift` | Reads a recording folder, extracts screenshots (`AVAssetImageGenerator`), transcribes (`SpeechAnalyzer`), writes `report.md`. |
 | `Tests/ScreenInkCoreTests/` | Swift Testing unit tests. |

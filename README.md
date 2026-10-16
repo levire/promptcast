@@ -16,7 +16,7 @@ make run
 
 On first use macOS asks for Microphone and Screen Recording access. After granting Screen Recording, quit (menu bar ◎ > Quit) and `make run` again. The app is ad-hoc signed, so permissions are requested again after each rebuild.
 
-Transcription uses the system language. To override: `defaults write dev.screenink locale en-US`.
+Change the shortcut and the transcription language in ◎ > Settings…. The shortcut can be a key combination or a single modifier key tapped alone (e.g. Left ⌘), which needs Input Monitoring permission. You can also stop a recording by clicking the overlay pill.
 
 ## Develop
 

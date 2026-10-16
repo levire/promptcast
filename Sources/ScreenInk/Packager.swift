@@ -36,7 +36,7 @@ enum Packager {
         }
     }
 
-    /// On-device transcription with per-word timings. Language comes from `defaults write dev.screenink locale de-DE`, else the system locale.
+    /// On-device transcription with per-word timings, in the Settings language or else the system locale.
     static func transcribe(_ audio: URL) async throws -> [Segment] {
         let wanted = UserDefaults.standard.string(forKey: "locale").map(Locale.init(identifier:)) ?? .current
         guard let locale = await SpeechTranscriber.supportedLocale(equivalentTo: wanted) else {
