@@ -45,6 +45,8 @@ enum Packager {
         }
         let transcriber = SpeechTranscriber(
             locale: locale, transcriptionOptions: [], reportingOptions: [], attributeOptions: [.audioTimeRange])
+        // A language model can be downloaded only after the app reserves its locale.
+        _ = try await AssetInventory.reserve(locale: locale)
         if let install = try await AssetInventory.assetInstallationRequest(supporting: [transcriber]) {
             try await install.downloadAndInstall()
         }
