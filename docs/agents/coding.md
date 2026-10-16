@@ -22,7 +22,7 @@ Swift 6 language mode with strict concurrency is on. Do not silence the compiler
 
 ## Break a guard once to see that it holds
 
-A lint rule, a check or a test that never failed is not shown to work. Add the violation that it must catch, in a separate file, and see it fail. Then delete that file.
+A lint rule, a check or a test that never failed is not shown to work. For a lint rule or a check, add the violation that it must catch in a separate file, see it fail, and delete that file. For a test, break the code that it protects: flip a comparison, remove a branch, skip an assignment. See the test fail, then restore the code. If no plausible change turns a test red, delete the test.
 
 ## Test at the lowest layer that can catch it
 
@@ -31,6 +31,12 @@ Test a defect once, at the cheapest layer that catches it. A rule in Core gets a
 ## A test checks what a caller can observe
 
 A test calls its subject as a caller does, and checks what the caller can observe: the return value, or what it can read back after the call. One test covers one behavior. A test that breaks when a rewrite keeps every behavior tests the implementation. Name a test after the behavior it covers, and say the expectation in the failure message.
+
+## A test protects something that can break
+
+A test is worth its place when a mistake that a person can plausibly make turns it red: a rule, a boundary, a value that must match a system constant, a bug that happened before. Do not test that a property returns what the initializer stored, or that a constant equals the literal in its own declaration.
+
+Take the expected value from a source that is independent of the code: a literal that you work out by hand, the specification, or a system constant. A test that computes its expectation with the code under test, or repeats its formula, passes by construction. Write `trigger.press(at: 1.0) == .cancel`, not `trigger.press(at: CancelTrigger.maxInterval) == .cancel`.
 
 ## Name a thing for what is in it
 
