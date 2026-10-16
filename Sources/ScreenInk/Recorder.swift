@@ -2,9 +2,6 @@ import AVFoundation
 import AppKit
 import ScreenCaptureKit
 import ScreenInkCore
-import os
-
-let log = Logger(subsystem: "dev.screenink", category: "app")
 
 /// Records the display under the mouse to `video.mov`, the microphone to `audio.m4a`, and mouse clicks into `session.json`.
 @MainActor
@@ -38,7 +35,9 @@ final class Recorder: NSObject, SCRecordingOutputDelegate {
         let mouse = NSEvent.mouseLocation
         guard let screen = NSScreen.screens.first(where: { NSMouseInRect(mouse, $0.frame, false) }) ?? NSScreen.main,
             let displayID = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? CGDirectDisplayID
-        else { throw ScreenInkError("No display found.") }
+        else {
+            throw ScreenInkError("No display found. Move the mouse to the screen you want to record and try again.")
+        }
         let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: false)
         guard let scDisplay = content.displays.first(where: { $0.displayID == displayID }) else {
             throw ScreenInkError(
@@ -143,9 +142,4 @@ final class Recorder: NSObject, SCRecordingOutputDelegate {
         log.error("Recording failed: \(error.localizedDescription, privacy: .public)")
         Task { @MainActor in self.finish(error) }
     }
-}
-
-struct ScreenInkError: LocalizedError {
-    let errorDescription: String?
-    init(_ message: String) { errorDescription = message }
 }

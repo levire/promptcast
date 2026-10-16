@@ -1,28 +1,21 @@
 # ScreenInk
 
-VoiceInk for screen recordings. Press **⌃⌥R**, talk through a bug while clicking around, press **⌃⌥R** again. ScreenInk writes `~/ScreenInk/<timestamp>/report.md` with your transcript split at each click, a screenshot just before every click (click position ringed) and one second after, plus the full video. The report path is copied to your clipboard; paste it to an agent.
+VoiceInk for screen recordings. Press your shortcut (default **⌃⌥R**), talk through a bug while clicking around, and press it again or click the overlay pill. ScreenInk writes `~/ScreenInk/<timestamp>/report.md`: your transcript split at each click, a screenshot just before every click (click position ringed) and one second after, start and end screenshots, and the full video. The report path is copied to your clipboard; paste it to an agent.
 
 Everything runs on device: ScreenCaptureKit for video, Apple's `SpeechAnalyzer` for transcription.
 
-## Requirements
-
-macOS 26, Xcode 26, `swiftlint` and `ffmpeg` (`brew install swiftlint ffmpeg`, only for linting and the e2e test).
-
 ## Run
+
+Requires macOS 26 and Xcode 26. For development also `brew install swiftlint ffmpeg`.
 
 ```sh
 make run
 ```
 
-On first use macOS asks for Microphone and Screen Recording access. After granting Screen Recording, quit (menu bar ◎ > Quit) and `make run` again. The app is ad-hoc signed, so permissions are requested again after each rebuild.
+macOS asks for Microphone and Screen Recording access on first use. After granting Screen Recording, quit ScreenInk from the ◎ menu and open it again.
 
-Change the shortcut and the transcription language in ◎ > Settings…. The shortcut can be a key combination or a single modifier key tapped alone (e.g. Left ⌘), which needs Input Monitoring permission. You can also stop a recording by clicking the overlay pill.
+Set the shortcut and transcription language in ◎ > Settings…. A single modifier tapped alone (for example Left ⌘) works too and needs Input Monitoring permission.
 
 ## Develop
 
-```sh
-git config core.hooksPath .githooks   # lint + tests on commit
-make check                            # lint, build, tests, e2e
-```
-
-See [AGENTS.md](AGENTS.md) for layout and conventions.
+See [AGENTS.md](AGENTS.md). It applies to humans as well.

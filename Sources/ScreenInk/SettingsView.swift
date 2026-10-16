@@ -5,7 +5,7 @@ import SwiftUI
 
 /// Settings window content. Add new settings as rows in a section, or as a new section.
 struct SettingsView: View {
-    @AppStorage("locale") private var locale = ""
+    @AppStorage(Preferences.localeKey) private var locale = ""
     @State private var locales: [String] = []
 
     var body: some View {
@@ -37,7 +37,7 @@ struct SettingsView: View {
 
 /// Click, then press a key combination or tap a single modifier key. Esc cancels.
 private struct ShortcutRecorder: View {
-    @State private var shortcut = Hotkey.saved
+    @State private var shortcut = Preferences.shortcut
     @State private var monitor: Any?
     @State private var message: String?
     @State private var tap = ModifierTap()
@@ -96,7 +96,7 @@ private struct ShortcutRecorder: View {
     private func stop() {
         if let monitor { NSEvent.removeMonitor(monitor) }
         monitor = nil
-        Hotkey.register(Hotkey.saved)
+        Hotkey.register(Preferences.shortcut)
     }
 
     private static func carbonModifiers(_ flags: NSEvent.ModifierFlags) -> Int {

@@ -2,16 +2,18 @@ APP := build/ScreenInk.app
 
 .PHONY: build test e2e lint format check app run clean
 
+# Every target depends on build, so the committed hooks activate on first use without a setup step.
 build:
+	@git config core.hooksPath .githooks 2>/dev/null || true
 	swift build
 
-test:
+test: build
 	swift test
 
 e2e: build
 	scripts/e2e.sh
 
-lint:
+lint: build
 	swift format lint --strict --recursive Sources Tests Package.swift
 	swiftlint lint --strict --quiet
 

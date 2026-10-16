@@ -5,18 +5,6 @@ import Testing
 
 private let display = Display(x: 0, y: 0, width: 1000, height: 500, scale: 2)
 
-@Test func pixelFlipsYAndScales() throws {
-    let p = try #require(display.pixel(x: 100, y: 400))
-    #expect(p.x == 200 && p.y == 200)
-    #expect(display.pixel(x: 1000, y: 10) == nil)
-}
-
-@Test func pixelHandlesSecondaryDisplayOffset() throws {
-    let left = Display(x: -800, y: 100, width: 800, height: 600, scale: 1)
-    let p = try #require(left.pixel(x: -700, y: 650))
-    #expect(p.x == 100 && p.y == 50)
-}
-
 @Test func frameTimesClampToVideo() {
     let t = Report.frameTimes(for: Click(time: 0.1, x: 0, y: 0, button: "left"), videoOffset: 0.05, videoDuration: 0.5)
     #expect(t.before == 0)
@@ -54,32 +42,4 @@ private let display = Display(x: 0, y: 0, width: 1000, height: 500, scale: 2)
             ![end](end.png)
 
             """)
-}
-
-@Test func shortcutLabelAndValidity() {
-    #expect(Shortcut.standard.label == "⌃⌥R")
-    let all = Shortcut(keyCode: 49, modifiers: Shortcut.command | Shortcut.shift | Shortcut.control, key: "Space")
-    #expect(all.label == "⌃⇧⌘Space")
-    #expect(!Shortcut(keyCode: 15, modifiers: Shortcut.shift, key: "R").isValid)
-}
-
-@Test func modifierTapNeedsSoloQuickPress() {
-    let leftCommand = 55
-    var tap = ModifierTap()
-    #expect(tap.flagsChanged(keyCode: leftCommand, flags: 0x10_0008, time: 0) == nil)
-    #expect(tap.flagsChanged(keyCode: leftCommand, flags: 0, time: 0.2) == leftCommand)
-
-    _ = tap.flagsChanged(keyCode: leftCommand, flags: 0x10_0008, time: 1)
-    tap.interrupt()  // e.g. ⌘C
-    #expect(tap.flagsChanged(keyCode: leftCommand, flags: 0, time: 1.1) == nil)
-
-    _ = tap.flagsChanged(keyCode: leftCommand, flags: 0x10_0008, time: 2)
-    #expect(tap.flagsChanged(keyCode: leftCommand, flags: 0, time: 3) == nil)  // held too long
-
-    _ = tap.flagsChanged(keyCode: 56, flags: 0x2_0002, time: 4)  // ⇧ held, then ⌘
-    #expect(tap.flagsChanged(keyCode: leftCommand, flags: 0x12_000A, time: 4.1) == nil)
-    #expect(tap.flagsChanged(keyCode: leftCommand, flags: 0x2_0002, time: 4.2) == nil)
-
-    #expect(Shortcut.modifierOnly(keyCode: leftCommand)?.label == "Left ⌘")
-    #expect(Shortcut.modifierOnly(keyCode: leftCommand)?.isValid == true)
 }

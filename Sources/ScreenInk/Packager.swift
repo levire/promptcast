@@ -38,9 +38,10 @@ enum Packager {
 
     /// On-device transcription with per-word timings, in the Settings language or else the system locale.
     static func transcribe(_ audio: URL) async throws -> [Segment] {
-        let wanted = UserDefaults.standard.string(forKey: "locale").map(Locale.init(identifier:)) ?? .current
+        let wanted = Preferences.locale.isEmpty ? Locale.current : Locale(identifier: Preferences.locale)
         guard let locale = await SpeechTranscriber.supportedLocale(equivalentTo: wanted) else {
-            throw ScreenInkError("Speech transcription does not support \(wanted.identifier).")
+            throw ScreenInkError(
+                "Transcription does not support \(wanted.identifier). Choose another language in ScreenInk Settings.")
         }
         let transcriber = SpeechTranscriber(
             locale: locale, transcriptionOptions: [], reportingOptions: [], attributeOptions: [.audioTimeRange])
@@ -112,9 +113,9 @@ enum Packager {
 
     private static func writePNG(_ image: CGImage, to url: URL) throws {
         guard let dest = CGImageDestinationCreateWithURL(url as CFURL, UTType.png.identifier as CFString, 1, nil) else {
-            throw ScreenInkError("Cannot write \(url.path).")
+            throw ScreenInkError.cannotWrite(url)
         }
         CGImageDestinationAddImage(dest, image, nil)
-        guard CGImageDestinationFinalize(dest) else { throw ScreenInkError("Cannot write \(url.path).") }
+        guard CGImageDestinationFinalize(dest) else { throw ScreenInkError.cannotWrite(url) }
     }
 }

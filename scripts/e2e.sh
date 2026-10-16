@@ -13,6 +13,13 @@ JSON
 for f in report.md transcript.json start.png end.png clicks/001-before.png clicks/002-after.png; do
   test -s "$dir/$f" || { echo "missing $f"; exit 1; }
 done
-grep -q '\*\*Click 2\*\*' "$dir/report.md" || { echo "no click in report"; exit 1; }
+for marker in '![start](start.png)' '**Click 1**' '**Click 2**' '![end](end.png)'; do
+  grep -qF "$marker" "$dir/report.md" || { echo "report.md lacks $marker"; exit 1; }
+done
+# Every image the report links to must exist.
+grep -o '](\([^)]*\.png\))' "$dir/report.md" | sed 's/^](//; s/)$//' | while read -r img; do
+  test -s "$dir/$img" || { echo "report.md links missing $img"; exit 1; }
+done
+grep -q '"text"' "$dir/transcript.json" || { echo "transcript.json has no segments"; exit 1; }
 grep -qi 'settings' "$dir/report.md" || { echo "transcript missing"; cat "$dir/report.md"; exit 1; }
 echo "e2e ok"

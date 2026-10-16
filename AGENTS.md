@@ -1,42 +1,32 @@
-# ScreenInk agent guide
+# ScreenInk
 
-ScreenInk is a macOS 26 menu-bar app. A global shortcut (default ⌃⌥R, set in Settings) starts a recording of the display under the mouse, the microphone, and mouse clicks. The shortcut or a click on the overlay pill stops it and writes a folder in `~/ScreenInk/<timestamp>/` containing `report.md` (transcript split at each click, with before/after screenshots), then copies the report path to the clipboard.
-
-## Layout
-
-| Path | Contents |
-|------|----------|
-| `Sources/ScreenInkCore/` | Pure logic: models (`Session`, `Click`, `Segment`, `Display`, `Shortcut`), coordinate math, frame timing, markdown. No AppKit, no I/O. All unit tests target this. |
-| `Sources/ScreenInk/main.swift` | App delegate, menu bar item, global shortcut (`Hotkey`: Carbon for key combos, event tap for a lone modifier), `--package` CLI mode. |
-| `Sources/ScreenInk/Overlay.swift` | Floating recording pill (level meter, timer, click to stop). |
-| `Sources/ScreenInk/SettingsView.swift` | Settings window: grouped `Form`, one `Section` per area. New settings go here, persisted with `@AppStorage`. |
-| `Sources/ScreenInk/Recorder.swift` | ScreenCaptureKit video (`SCRecordingOutput`), `AVAudioRecorder` audio, global click monitor. Writes `session.json`. |
-| `Sources/ScreenInk/Packager.swift` | Reads a recording folder, extracts screenshots (`AVAssetImageGenerator`), transcribes (`SpeechAnalyzer`), writes `report.md`. |
-| `Tests/ScreenInkCoreTests/` | Swift Testing unit tests. |
-| `scripts/e2e.sh` | Packages a synthetic recording (`say` audio, `ffmpeg` test video) and checks the output. |
-
-Pipeline: `Recorder` produces `session.json` + `video.mov` + `audio.m4a`; `Packager.run(dir:)` turns that folder into the report. Times in `session.json` are seconds since audio start; `videoOffset` maps them onto the video.
+macOS menu-bar app: a global shortcut records the screen, microphone and mouse clicks, then writes `~/ScreenInk/<timestamp>/report.md` (transcript split at each click, with screenshots) for handing to an agent.
 
 ## Commands
 
-- `make check`: lint, build, unit tests, e2e. Must pass before a change is done.
-- `make format`: auto-fix formatting and fixable lint issues.
-- `make app` / `make run`: build `build/ScreenInk.app` (ad-hoc signed) and launch it.
-- `.build/debug/ScreenInk --package <dir>`: rerun packaging on an existing recording folder without recording. Use this to iterate on report output.
+- `make check`: lint, build, unit tests, e2e. Run it before calling any change done; CI and the pre-commit hook run the same target.
+- `make format`: fix formatting and auto-fixable lint issues.
+- `.build/debug/ScreenInk --package <dir>`: rebuild the report of an existing recording folder. Use it to iterate on output without recording.
+- `make run`: build and launch `build/ScreenInk.app`. Only a human can use it; see below.
 
-Recording itself needs Screen Recording and Microphone permission and a human at the keyboard, so agents cannot exercise `Recorder` directly. Put testable logic in `ScreenInkCore`, and cover packaging changes with `scripts/e2e.sh`.
+Agents cannot record: capture needs Screen Recording, Microphone and Input Monitoring permission and a person at the keyboard. Verify through `make check`, and ask the user to try a recording when a change touches capture.
 
-## Conventions
+## Architecture
 
-- Swift 6 language mode, strict concurrency. UI and recording state are `@MainActor`; framework delegate callbacks are `nonisolated` and hop to the main actor.
-- Formatting is owned by `swift format` (`.swift-format`); `swiftlint` (`.swiftlint.yml`) covers the rest. Don't hand-format against them.
-- Naming: Swift API Design Guidelines. Types `UpperCamelCase`, everything else `lowerCamelCase`, one primary type per file, file named after it.
-- No force unwraps. Errors shown to the user are `ScreenInkError` with a message saying what to do.
-- No new dependencies without a strong reason. Apple frameworks cover capture, speech, and imaging.
-- Prefer the smallest change. Mark deliberate shortcuts with a `ponytail:` comment naming the limit and the upgrade path.
-- Comments describe current behavior and why; no change history.
-- New logic in `ScreenInkCore` gets a test in `Tests/ScreenInkCoreTests/`.
+- `ScreenInkCore` holds every decision that can be made without the system: models, timing, coordinate math, report text. It imports only Foundation (a lint rule enforces this) and is where unit tests go.
+- `ScreenInk` is the thin layer over AppKit, SwiftUI and the capture, speech and input frameworks. Keep logic out of it: when platform code needs a calculation or a decision, put that in Core as a pure function and test it there. `Sources/ScreenInk/AGENTS.md` has the rules for this layer.
+- A recording flows one way: the recorder writes raw files and `session.json`, then the packager turns that folder into the report. Keep that split so packaging stays reproducible from a folder on disk.
 
-## Output contract
+## Rules
 
-`report.md` is what users hand to other agents, so treat its format as an interface: relative image paths, `**Click N**` markers, and the files listed in its header. Update `scripts/e2e.sh` and `markdownSplitsTranscriptAtClicks` when it changes.
+- Swift 6 language mode with strict concurrency. Never silence the compiler with `@unchecked Sendable` or `nonisolated(unsafe)`.
+- No force unwraps, force casts or `try!`.
+- One type per file, named after the type. Private helpers used only by that type may share its file.
+- Errors the user sees are `ScreenInkError` and say what to do next.
+- Every persisted setting goes through `Preferences`, so each key is spelled once.
+- No package dependencies without asking the user. Apple frameworks cover capture, speech and imaging.
+- New logic in Core comes with a Swift Testing test.
+- `report.md` is read by other agents, so its format is an interface. Change it deliberately and update the report tests and `scripts/e2e.sh` with it.
+- Prefer the smallest change. Mark a deliberate shortcut with a `ponytail:` comment naming its limit and the upgrade path.
+- Comments state what the code does now and why. No history, no ticket numbers.
+- Commit messages: imperative summary line under 72 characters, body explaining why.

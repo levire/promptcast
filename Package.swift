@@ -6,7 +6,7 @@ let package = Package(
     platforms: [.macOS(.v26)],
     targets: [
         .target(name: "ScreenInkCore"),
-        .executableTarget(name: "ScreenInk", dependencies: ["ScreenInkCore"]),
+        .executableTarget(name: "ScreenInk", dependencies: ["ScreenInkCore"], exclude: ["AGENTS.md"]),
         .testTarget(name: "ScreenInkCoreTests", dependencies: ["ScreenInkCore"]),
     ]
 )
