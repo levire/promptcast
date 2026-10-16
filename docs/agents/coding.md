@@ -24,6 +24,8 @@ Swift 6 language mode with strict concurrency is on. Do not silence the compiler
 
 A lint rule, a check or a test that never failed is not shown to work. For a lint rule or a check, add the violation that it must catch in a separate file, see it fail, and delete that file. For a test, break the code that it protects: flip a comparison, remove a branch, skip an assignment. See the test fail, then restore the code. If no plausible change turns a test red, delete the test.
 
+`make mutate` does this for Core with Muter: it flips comparisons, logical operators and ternaries, removes calls, and lists each change that no test catches. It does not change constants, arithmetic or the bounds of a range, so break those by hand.
+
 ## Test at the lowest layer that can catch it
 
 Test a defect once, at the cheapest layer that catches it. A rule in Core gets a Swift Testing test in `Tests/PromptCastCoreTests/`. `scripts/e2e.sh` covers what only a full packaging run shows: files on disk and the links between them. Do not test that Apple's frameworks do their job.

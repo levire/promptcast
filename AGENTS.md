@@ -17,6 +17,7 @@ macOS menu-bar app: a global shortcut records the screen, microphone and mouse c
 
 - `make check`: lint (swift-format, SwiftLint, Periphery, gitleaks), build, unit tests, e2e. Run it before calling any change done. CI and the git hooks run the same checks.
 - `make format`: fix formatting and auto-fixable lint issues.
+- `make mutate`: mutation testing of `PromptCastCore` with Muter. It lists each change to the code that no test catches. It is not part of `make check`.
 - `.build/debug/PromptCast --package <dir>`: rebuild the report of an existing recording folder, to iterate on output without recording.
 - `make run`: build and launch `build/PromptCast.app`.
 
