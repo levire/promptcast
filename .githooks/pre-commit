@@ -1,2 +1,4 @@
 #!/bin/sh
+set -e
+gitleaks git --staged --no-banner --redact --log-level warn
 exec make check

@@ -1,0 +1,5 @@
+{
+  "name": "promptcast",
+  "owner": { "name": "promptcast" },
+  "plugins": [{ "name": "swift-lsp", "source": "./.claude/plugins/swift-lsp" }]
+}

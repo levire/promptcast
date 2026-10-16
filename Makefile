@@ -16,6 +16,8 @@ e2e: build
 lint: build
 	swift format lint --strict --recursive Sources Tests Package.swift
 	swiftlint lint --strict --quiet
+	periphery scan --strict --quiet
+	gitleaks git --no-banner --redact --log-level warn
 
 format:
 	swift format --in-place --recursive Sources Tests Package.swift

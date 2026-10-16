@@ -9,8 +9,10 @@ jobs:
     runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - run: sudo xcode-select -s /Applications/Xcode_26.6.app/Contents/Developer
-      - run: brew install swiftlint ffmpeg
+      - run: brew install swiftlint ffmpeg periphery gitleaks
       - uses: actions/cache@v4
         with:
           path: .build

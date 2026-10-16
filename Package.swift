@@ -6,7 +6,7 @@ let package = Package(
     platforms: [.macOS(.v26)],
     targets: [
         .target(name: "PromptCastCore"),
-        .executableTarget(name: "PromptCast", dependencies: ["PromptCastCore"], exclude: ["AGENTS.md"]),
+        .executableTarget(name: "PromptCast", dependencies: ["PromptCastCore"]),
         .testTarget(name: "PromptCastCoreTests", dependencies: ["PromptCastCore"]),
     ]
 )

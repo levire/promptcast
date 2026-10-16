@@ -1,0 +1,5 @@
+{
+  "name": "swift-lsp",
+  "description": "Swift language server (sourcekit-lsp) for agents: go to definition, references and compiler diagnostics without a full build",
+  "version": "1.0.0"
+}

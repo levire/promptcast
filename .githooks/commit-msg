@@ -1,0 +1,11 @@
+#!/bin/sh
+# Checks the first line against docs/agents/commits.md.
+subject=$(head -n 1 "$1")
+case "$subject" in Merge\ *|Revert\ *|fixup!\ *|squash!\ *) exit 0 ;; esac
+pattern='^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\((core|app)\))?!?: [a-z0-9`].*[^.]$'
+if ! printf '%s' "$subject" | grep -Eq "$pattern" || [ ${#subject} -gt 72 ]; then
+  echo "commit-msg: \"$subject\" does not follow docs/agents/commits.md" >&2
+  echo "  expected: type(scope): lowercase imperative subject, no full stop, at most 72 characters" >&2
+  echo "  types: build chore ci docs feat fix perf refactor revert style test; scopes: core app" >&2
+  exit 1
+fi

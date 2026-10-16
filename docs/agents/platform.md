@@ -1,6 +1,6 @@
-# Platform layer
+# Platform
 
-Rules for code that touches AppKit, SwiftUI and the system frameworks.
+This file adds the rules for code in `Sources/PromptCast` that touches AppKit, SwiftUI and the system frameworks.
 
 - UI and recording state are `@MainActor`. Framework callbacks that arrive on other queues are `nonisolated` and hop with `Task { @MainActor in }`; callbacks documented to run on the main thread use `MainActor.assumeIsolated`.
 - Log with the shared `log` (subsystem `dev.promptcast`). Mark strings `privacy: .public` only when they hold no user content. Logs are the only way to debug a recording an agent cannot run: read them with `/usr/bin/log show --predicate 'subsystem == "dev.promptcast"' --last 10m` (the full path matters, because zsh has a `log` builtin).
