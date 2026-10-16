@@ -43,3 +43,8 @@ private let display = Display(x: 0, y: 0, width: 1000, height: 500, scale: 2)
 
             """)
 }
+
+@Test func timestampCarriesRoundedSecondsIntoTheMinute() {
+    #expect(Report.timestamp(59.96) == "01:00.0", "59.96 s rounds to a full minute, not to 00:60.0")
+    #expect(Report.timestamp(3599.99) == "60:00.0", "rounding carries into the minutes at every minute")
+}

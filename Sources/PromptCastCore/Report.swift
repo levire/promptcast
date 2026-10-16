@@ -58,8 +58,9 @@ public enum Report {
         return out + "**End**\n\n![end](end.png)\n"
     }
 
+    /// Returns `seconds` as minutes and seconds to a tenth, like `01:05.3`. Negative times read as `00:00.0`.
     public static func timestamp(_ seconds: Double) -> String {
-        let s = max(seconds, 0)
-        return String(format: "%02d:%04.1f", Int(s) / 60, s.truncatingRemainder(dividingBy: 60))
+        let tenths = Int((max(seconds, 0) * 10).rounded())
+        return String(format: "%02d:%02d.%d", tenths / 600, tenths % 600 / 10, tenths % 10)
     }
 }
