@@ -57,3 +57,35 @@ func combinationWithOneOfControlOptionCommandIsValid(name: String, modifiers: In
     let shortcut = Shortcut(keyCode: kVK_Command, modifiers: controlKey, key: "Left ⌘")
     #expect(!shortcut.isModifierOnly, "set modifiers make it a combination")
 }
+
+@Test func defaultCancelKeyIsEscape() {
+    #expect(Shortcut.escape.keyCode == kVK_Escape, "the default cancel key is Esc")
+    #expect(Shortcut.escape.label == "Esc", "Esc without modifiers reads Esc")
+}
+
+@Test(arguments: [
+    ("Esc", kVK_Escape), ("F1", kVK_F1), ("F2", kVK_F2), ("F3", kVK_F3), ("F4", kVK_F4), ("F5", kVK_F5),
+    ("F6", kVK_F6), ("F7", kVK_F7), ("F8", kVK_F8), ("F9", kVK_F9), ("F10", kVK_F10), ("F11", kVK_F11),
+    ("F12", kVK_F12),
+])
+func keyThatTypingNeverPressesCancelsAlone(name: String, keyCode: Int) {
+    let shortcut = Shortcut(keyCode: keyCode, modifiers: 0, key: name)
+    #expect(shortcut.isValidCancelKey, "\(name) alone is a valid cancel key")
+}
+
+@Test(arguments: [("A", kVK_ANSI_A), ("1", kVK_ANSI_1), ("Space", kVK_Space), ("↩", kVK_Return)])
+func typingKeyDoesNotCancelAlone(name: String, keyCode: Int) {
+    #expect(!Shortcut(keyCode: keyCode, modifiers: 0, key: name).isValidCancelKey, "typing \(name) must not cancel")
+    #expect(
+        !Shortcut(keyCode: keyCode, modifiers: shiftKey, key: name).isValidCancelKey, "typing ⇧\(name) must not cancel")
+}
+
+@Test func combinationWithCommandModifierCancels() {
+    let shortcut = Shortcut(keyCode: kVK_ANSI_X, modifiers: controlKey | optionKey, key: "X")
+    #expect(shortcut.isValidCancelKey, "⌃⌥X is a valid cancel key")
+}
+
+@Test func modifierKeyAloneDoesNotCancel() {
+    let shortcut = Shortcut(keyCode: kVK_Command, modifiers: 0, key: "Left ⌘")
+    #expect(!shortcut.isValidCancelKey, "the cancel key watches key presses, so a modifier alone cannot cancel")
+}

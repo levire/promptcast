@@ -6,16 +6,25 @@ import SwiftUI
 /// Settings window content. Add new settings as rows in a section, or as a new section.
 struct SettingsView: View {
     @AppStorage(Preferences.localeKey) private var locale = ""
-    @AppStorage(Preferences.cancelKeyKey) private var cancelKey = Preferences.defaultCancelKey
     @AppStorage(Preferences.cancelTwiceKey) private var cancelTwice = Preferences.defaultCancelTwice
     @State private var locales: [String] = []
 
     var body: some View {
         Form {
             Section("Recording") {
-                LabeledContent("Start / stop shortcut") { ShortcutRecorder() }
-                Picker("Cancel key", selection: $cancelKey) {
-                    ForEach(CancelKey.allCases, id: \.self) { Text($0.label).tag($0) }
+                LabeledContent("Start / stop shortcut") {
+                    ShortcutRecorder(
+                        shortcut: Preferences.shortcut, isValid: \.isValid,
+                        invalidHint: "Include ⌃, ⌥ or ⌘, or tap one modifier alone", save: Hotkey.use)
+                }
+                LabeledContent("Cancel key") {
+                    ShortcutRecorder(
+                        shortcut: Preferences.cancelKey, isValid: \.isValidCancelKey,
+                        invalidHint: "Use Esc, an F key, or include ⌃, ⌥ or ⌘",
+                        save: {
+                            Preferences.cancelKey = $0
+                            return nil
+                        })
                 }
                 Picker("Cancel with", selection: $cancelTwice) {
                     Text("Double press").tag(true)
@@ -44,12 +53,26 @@ struct SettingsView: View {
     }
 }
 
-/// Click, then press a key combination or tap a single modifier key. Esc cancels.
+/// Click, then press a key combination or tap a single modifier key. Esc stops recording when it is not a valid
+/// shortcut. `save` returns why a shortcut cannot be used, or nil.
 private struct ShortcutRecorder: View {
-    @State private var shortcut = Preferences.shortcut
+    let isValid: (Shortcut) -> Bool
+    let invalidHint: String
+    let save: (Shortcut) -> String?
+    @State private var shortcut: Shortcut
     @State private var monitor: Any?
     @State private var message: String?
     @State private var tap = ModifierTap()
+
+    init(
+        shortcut: Shortcut, isValid: @escaping (Shortcut) -> Bool, invalidHint: String,
+        save: @escaping (Shortcut) -> String?
+    ) {
+        self.isValid = isValid
+        self.invalidHint = invalidHint
+        self.save = save
+        _shortcut = State(initialValue: shortcut)
+    }
 
     var body: some View {
         HStack {
@@ -62,43 +85,38 @@ private struct ShortcutRecorder: View {
         .onDisappear { if monitor != nil { stop() } }
     }
 
+    // The start/stop hotkey is off while recording, so pressing it here does not start a recording.
     private func start() {
         message = nil
         Hotkey.unregister()
         tap = ModifierTap()
         monitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .flagsChanged]) { event in
-            MainActor.assumeIsolated { handle(event) }
+            MainActor.assumeIsolated { record(event) }
             return nil
         }
     }
 
-    private func handle(_ event: NSEvent) {
+    private func record(_ event: NSEvent) {
         if event.type == .flagsChanged {
             let flags = UInt64(event.modifierFlags.rawValue)
             if let keyCode = tap.flagsChanged(keyCode: Int(event.keyCode), flags: flags, time: event.timestamp),
                 let candidate = Shortcut.modifierOnly(keyCode: keyCode)
             {
-                save(candidate)
+                use(candidate)
             }
             return
         }
         tap.interrupt()
-        if event.keyCode == kVK_Escape {
-            stop()
-            return
-        }
-        let candidate = Shortcut(
-            keyCode: Int(event.keyCode), modifiers: Self.carbonModifiers(event.modifierFlags), key: Self.keyName(event))
-        guard candidate.isValid else {
-            message = "Include ⌃, ⌥ or ⌘, or tap one modifier alone"
-            return
-        }
-        save(candidate)
+        use(Shortcut(event: event))
     }
 
-    private func save(_ candidate: Shortcut) {
+    private func use(_ candidate: Shortcut) {
+        guard isValid(candidate) else {
+            if candidate.keyCode == kVK_Escape { stop() } else { message = invalidHint }
+            return
+        }
         stop()
-        message = Hotkey.use(candidate)
+        message = save(candidate)
         if message == nil { shortcut = candidate }
     }
 
@@ -106,23 +124,5 @@ private struct ShortcutRecorder: View {
         if let monitor { NSEvent.removeMonitor(monitor) }
         monitor = nil
         Hotkey.register(Preferences.shortcut)
-    }
-
-    private static func carbonModifiers(_ flags: NSEvent.ModifierFlags) -> Int {
-        [
-            (NSEvent.ModifierFlags.control, Shortcut.control), (.option, Shortcut.option), (.shift, Shortcut.shift),
-            (.command, Shortcut.command),
-        ]
-        .filter { flags.contains($0.0) }.reduce(0) { $0 | $1.1 }
-    }
-
-    private static func keyName(_ event: NSEvent) -> String {
-        let names = [
-            kVK_Space: "Space", kVK_Return: "↩", kVK_Tab: "⇥", kVK_Delete: "⌫", kVK_LeftArrow: "←",
-            kVK_RightArrow: "→", kVK_UpArrow: "↑", kVK_DownArrow: "↓", kVK_F1: "F1", kVK_F2: "F2",
-            kVK_F3: "F3", kVK_F4: "F4", kVK_F5: "F5", kVK_F6: "F6", kVK_F7: "F7", kVK_F8: "F8",
-            kVK_F9: "F9", kVK_F10: "F10", kVK_F11: "F11", kVK_F12: "F12",
-        ]
-        return names[Int(event.keyCode)] ?? event.charactersIgnoringModifiers?.uppercased() ?? "?"
     }
 }

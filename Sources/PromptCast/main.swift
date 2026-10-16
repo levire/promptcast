@@ -135,8 +135,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let key = Preferences.cancelKey
         var trigger = CancelTrigger(twice: Preferences.cancelTwice)
         cancelTap = EventTap(events: [.keyDown]) { [weak self] _, event in
-            guard event.getIntegerValueField(.keyboardEventKeycode) == key.rawValue,
-                event.getIntegerValueField(.keyboardEventAutorepeat) == 0
+            guard event.getIntegerValueField(.keyboardEventAutorepeat) == 0,
+                let pressed = NSEvent(cgEvent: event).map(Shortcut.init(event:)),
+                pressed.keyCode == key.keyCode, pressed.modifiers == key.modifiers
             else { return }
             switch trigger.press(at: ProcessInfo.processInfo.systemUptime) {
             case .cancel:

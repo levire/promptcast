@@ -8,6 +8,12 @@ public struct Shortcut: Codable, Sendable, Equatable {
     /// ⌃⌥R (`kVK_ANSI_R` is 15).
     public static let standard = Shortcut(keyCode: 15, modifiers: control | option, key: "R")
 
+    /// Esc (`kVK_Escape` is 53), the default cancel key.
+    public static let escape = Shortcut(keyCode: 53, modifiers: 0, key: "Esc")
+
+    /// Key codes of Esc and F1 to F12, which typing never presses.
+    static let standaloneKeys: Set<Int> = [53, 122, 120, 99, 118, 96, 97, 98, 100, 101, 109, 103, 111]
+
     public var keyCode: Int
     public var modifiers: Int
     public var key: String
@@ -25,7 +31,16 @@ public struct Shortcut: Codable, Sendable, Equatable {
 
     /// A key combination needs ⌃, ⌥ or ⌘ so it cannot swallow ordinary typing.
     public var isValid: Bool {
-        isModifierOnly || modifiers & (Self.control | Self.option | Self.command) != 0
+        isModifierOnly || hasCommandModifier
+    }
+
+    /// A cancel key is Esc, an F key, or a combination with ⌃, ⌥ or ⌘, so typing cannot cancel a recording.
+    public var isValidCancelKey: Bool {
+        hasCommandModifier || Self.standaloneKeys.contains(keyCode)
+    }
+
+    private var hasCommandModifier: Bool {
+        modifiers & (Self.control | Self.option | Self.command) != 0
     }
 }
 
