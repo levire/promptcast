@@ -1,0 +1,10 @@
+# swift-format owns layout; SwiftLint covers semantics it does not.
+included: [Sources, Tests]
+disabled_rules: [trailing_comma, opening_brace, line_length, identifier_name, closure_parameter_position]
+opt_in_rules:
+  - empty_count
+  - first_where
+  - force_unwrapping
+  - implicitly_unwrapped_optional
+function_body_length: { warning: 60 }
+file_length: { warning: 400 }
