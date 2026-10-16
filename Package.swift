@@ -2,11 +2,11 @@
 import PackageDescription
 
 let package = Package(
-    name: "ScreenInk",
+    name: "PromptCast",
     platforms: [.macOS(.v26)],
     targets: [
-        .target(name: "ScreenInkCore"),
-        .executableTarget(name: "ScreenInk", dependencies: ["ScreenInkCore"], exclude: ["AGENTS.md"]),
-        .testTarget(name: "ScreenInkCoreTests", dependencies: ["ScreenInkCore"]),
+        .target(name: "PromptCastCore"),
+        .executableTarget(name: "PromptCast", dependencies: ["PromptCastCore"], exclude: ["AGENTS.md"]),
+        .testTarget(name: "PromptCastCoreTests", dependencies: ["PromptCastCore"]),
     ]
 )

@@ -4,7 +4,7 @@
       "Bash(make build)", "Bash(make test)", "Bash(make e2e)", "Bash(make lint)",
       "Bash(make format)", "Bash(make check)", "Bash(make app)",
       "Bash(swift build:*)", "Bash(swift test:*)", "Bash(swift format:*)", "Bash(swiftlint:*)",
-      "Bash(.build/debug/ScreenInk --package:*)", "Bash(scripts/e2e.sh:*)",
+      "Bash(.build/debug/PromptCast --package:*)", "Bash(scripts/e2e.sh:*)",
       "Bash(/usr/bin/log show:*)"
     ]
   },

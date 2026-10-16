@@ -10,9 +10,9 @@ function_body_length: { warning: 60 }
 file_length: { warning: 400 }
 custom_rules:
   core_imports_foundation_only:
-    included: "Sources/ScreenInkCore/.*\\.swift"
+    included: "Sources/PromptCastCore/.*\\.swift"
     regex: "^import (?!Foundation$)\\w+"
-    message: "ScreenInkCore stays free of system frameworks so it is testable without permissions. Move this code to Sources/ScreenInk."
+    message: "PromptCastCore stays free of system frameworks so it is testable without permissions. Move this code to Sources/PromptCast."
     severity: error
   no_concurrency_escape_hatches:
     included: "Sources/.*\\.swift"

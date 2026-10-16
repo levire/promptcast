@@ -1,7 +1,7 @@
 import Foundation
 import Testing
 
-@testable import ScreenInkCore
+@testable import PromptCastCore
 
 private let display = Display(x: 0, y: 0, width: 1000, height: 500, scale: 2)
 

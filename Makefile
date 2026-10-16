@@ -1,4 +1,4 @@
-APP := build/ScreenInk.app
+APP := build/PromptCast.app
 
 .PHONY: build test e2e lint format check app run clean
 
@@ -30,7 +30,7 @@ SIGN_ID ?= $(shell security find-identity -p codesigning -v | awk '/Apple Develo
 app:
 	swift build -c release
 	rm -rf $(APP) && mkdir -p $(APP)/Contents/MacOS
-	cp .build/release/ScreenInk $(APP)/Contents/MacOS/
+	cp .build/release/PromptCast $(APP)/Contents/MacOS/
 	cp Resources/Info.plist $(APP)/Contents/
 	codesign --force --sign "$(or $(SIGN_ID),-)" $(APP)
 

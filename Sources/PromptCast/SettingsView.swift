@@ -1,5 +1,5 @@
 import Carbon.HIToolbox
-import ScreenInkCore
+import PromptCastCore
 import Speech
 import SwiftUI
 

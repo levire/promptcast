@@ -1,5 +1,5 @@
 import AVFoundation
-import ScreenInkCore
+import PromptCastCore
 import Speech
 import UniformTypeIdentifiers
 
@@ -40,8 +40,8 @@ enum Packager {
     static func transcribe(_ audio: URL) async throws -> [Segment] {
         let wanted = Preferences.locale.isEmpty ? Locale.current : Locale(identifier: Preferences.locale)
         guard let locale = await SpeechTranscriber.supportedLocale(equivalentTo: wanted) else {
-            throw ScreenInkError(
-                "Transcription does not support \(wanted.identifier). Choose another language in ScreenInk Settings.")
+            throw PromptCastError(
+                "Transcription does not support \(wanted.identifier). Choose another language in PromptCast Settings.")
         }
         let transcriber = SpeechTranscriber(
             locale: locale, transcriptionOptions: [], reportingOptions: [], attributeOptions: [.audioTimeRange])
@@ -113,9 +113,9 @@ enum Packager {
 
     private static func writePNG(_ image: CGImage, to url: URL) throws {
         guard let dest = CGImageDestinationCreateWithURL(url as CFURL, UTType.png.identifier as CFString, 1, nil) else {
-            throw ScreenInkError.cannotWrite(url)
+            throw PromptCastError.cannotWrite(url)
         }
         CGImageDestinationAddImage(dest, image, nil)
-        guard CGImageDestinationFinalize(dest) else { throw ScreenInkError.cannotWrite(url) }
+        guard CGImageDestinationFinalize(dest) else { throw PromptCastError.cannotWrite(url) }
     }
 }

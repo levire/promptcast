@@ -1,5 +1,5 @@
 import Foundation
-import ScreenInkCore
+import PromptCastCore
 
 /// Every persisted preference, so each key is spelled once. SwiftUI views bind with `@AppStorage(Preferences.…Key)`.
 enum Preferences {

@@ -1,9 +1,9 @@
 import AppKit
 import Carbon.HIToolbox
-import ScreenInkCore
+import PromptCastCore
 import SwiftUI
 
-// `ScreenInk --package <dir>` rebuilds a recording's report without recording, for iterating on packaging.
+// `PromptCast --package <dir>` rebuilds a recording's report without recording, for iterating on packaging.
 let args = CommandLine.arguments
 if args.count == 3, args[1] == "--package" {
     do {
@@ -29,7 +29,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         case busy
     }
 
-    static let root = FileManager.default.homeDirectoryForCurrentUser.appending(path: "ScreenInk")
+    static let root = FileManager.default.homeDirectoryForCurrentUser.appending(path: "PromptCast")
     private let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     private var state = State.idle
     private var lastReport: URL?
@@ -108,12 +108,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         item.button?.title = "◎"
         overlay.hide()
         let alert = NSAlert()
-        if let error = error as? ScreenInkError {
-            alert.messageText = error.errorDescription ?? "ScreenInk failed."
+        if let error = error as? PromptCastError {
+            alert.messageText = error.errorDescription ?? "PromptCast failed."
         } else {
-            alert.messageText = "ScreenInk failed. Try again."
+            alert.messageText = "PromptCast failed. Try again."
             alert.informativeText =
-                "If it keeps failing, open Console and filter for dev.screenink.\n\n\(error.localizedDescription)"
+                "If it keeps failing, open Console and filter for dev.promptcast.\n\n\(error.localizedDescription)"
         }
         NSApp.activate()
         alert.runModal()
@@ -126,7 +126,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     @objc func openSettings() {
         if settingsWindow == nil {
             let window = NSWindow(contentViewController: NSHostingController(rootView: SettingsView()))
-            window.title = "ScreenInk Settings"
+            window.title = "PromptCast Settings"
             window.styleMask = [.titled, .closable]
             window.isReleasedWhenClosed = false
             window.center()

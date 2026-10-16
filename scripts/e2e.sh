@@ -9,7 +9,7 @@ cat > "$dir/session.json" <<JSON
 {"startedAt":"2026-01-01T00:00:00Z","videoOffset":0.1,"display":{"x":0,"y":0,"width":500,"height":250,"scale":2},
  "clicks":[{"time":2.2,"x":100,"y":200,"button":"left"},{"time":3.6,"x":400,"y":50,"button":"left"}]}
 JSON
-"${1:-.build/debug/ScreenInk}" --package "$dir" >/dev/null
+"${1:-.build/debug/PromptCast}" --package "$dir" >/dev/null
 for f in report.md transcript.json start.png end.png clicks/001-before.png clicks/002-after.png; do
   test -s "$dir/$f" || { echo "missing $f"; exit 1; }
 done

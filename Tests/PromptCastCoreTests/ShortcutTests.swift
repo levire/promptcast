@@ -1,6 +1,6 @@
 import Testing
 
-@testable import ScreenInkCore
+@testable import PromptCastCore
 
 @Test func shortcutLabelAndValidity() {
     #expect(Shortcut.standard.label == "⌃⌥R")

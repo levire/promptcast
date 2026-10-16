@@ -1,7 +1,7 @@
 import AVFoundation
 import AppKit
+import PromptCastCore
 import ScreenCaptureKit
-import ScreenInkCore
 
 /// Records the display under the mouse to `video.mov`, the microphone to `audio.m4a`, and mouse clicks into `session.json`.
 @MainActor
@@ -24,23 +24,23 @@ final class Recorder: NSObject, SCRecordingOutputDelegate {
 
     func start() async throws {
         guard await AVCaptureDevice.requestAccess(for: .audio) else {
-            throw ScreenInkError("Microphone access denied. Enable it in System Settings > Privacy & Security.")
+            throw PromptCastError("Microphone access denied. Enable it in System Settings > Privacy & Security.")
         }
         // macOS applies a new Screen Recording grant only after the app relaunches.
         guard CGPreflightScreenCaptureAccess() || CGRequestScreenCaptureAccess() else {
-            throw ScreenInkError(
-                "Turn on ScreenInk in System Settings > Privacy & Security > Screen & System Audio Recording, "
-                    + "then quit ScreenInk from the menu bar and open it again.")
+            throw PromptCastError(
+                "Turn on PromptCast in System Settings > Privacy & Security > Screen & System Audio Recording, "
+                    + "then quit PromptCast from the menu bar and open it again.")
         }
         let mouse = NSEvent.mouseLocation
         guard let screen = NSScreen.screens.first(where: { NSMouseInRect(mouse, $0.frame, false) }) ?? NSScreen.main,
             let displayID = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? CGDirectDisplayID
         else {
-            throw ScreenInkError("No display found. Move the mouse to the screen you want to record and try again.")
+            throw PromptCastError("No display found. Move the mouse to the screen you want to record and try again.")
         }
         let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: false)
         guard let scDisplay = content.displays.first(where: { $0.displayID == displayID }) else {
-            throw ScreenInkError(
+            throw PromptCastError(
                 "Display not shareable. Grant Screen Recording in System Settings > Privacy & Security.")
         }
 

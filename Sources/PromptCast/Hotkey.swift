@@ -1,6 +1,6 @@
 import AppKit
 import Carbon.HIToolbox
-import ScreenInkCore
+import PromptCastCore
 
 /// System-wide shortcut. Key combinations use Carbon hotkeys, which need no permission. A modifier key on its own
 /// uses a listen-only event tap, which needs Input Monitoring permission.
@@ -54,7 +54,7 @@ enum Hotkey {
             handlerInstalled = true
         }
         let status = RegisterEventHotKey(
-            UInt32(shortcut.keyCode), UInt32(shortcut.modifiers), EventHotKeyID(signature: 0x5349_4E4B, id: 1),
+            UInt32(shortcut.keyCode), UInt32(shortcut.modifiers), EventHotKeyID(signature: 0x5043_5354, id: 1),
             GetApplicationEventTarget(), 0, &ref)
         return status == noErr ? nil : "\(shortcut.label) is used by another app"
     }
@@ -72,7 +72,7 @@ enum Hotkey {
                 }, userInfo: nil)
         else {
             CGRequestListenEventAccess()
-            return "Allow ScreenInk in Privacy & Security > Input Monitoring, then quit and reopen ScreenInk"
+            return "Allow PromptCast in Privacy & Security > Input Monitoring, then quit and reopen PromptCast"
         }
         let source = CFMachPortCreateRunLoopSource(nil, tap, 0)
         CFRunLoopAddSource(CFRunLoopGetMain(), source, .commonModes)

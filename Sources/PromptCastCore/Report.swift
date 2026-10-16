@@ -22,7 +22,7 @@ public enum Report {
     /// Segment texts carry their own spacing, as SpeechTranscriber runs do.
     public static func markdown(session: Session, segments: [Segment]) -> String {
         var out = """
-            # ScreenInk recording \(session.startedAt.formatted(.iso8601))
+            # PromptCast recording \(session.startedAt.formatted(.iso8601))
 
             Narrated screen recording. The transcript is in spoken order; each **Click** marks where the user \
             clicked, with a screenshot just before (red ring = click position) and \(afterDelay)s after. \

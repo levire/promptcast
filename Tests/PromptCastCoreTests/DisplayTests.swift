@@ -1,6 +1,6 @@
 import Testing
 
-@testable import ScreenInkCore
+@testable import PromptCastCore
 
 @Test func pixelFlipsYAndScales() throws {
     let display = Display(x: 0, y: 0, width: 1000, height: 500, scale: 2)
