@@ -1,7 +1,8 @@
 import AppKit
 import SwiftUI
 
-/// Floating status pill at the bottom of the screen; clicking it while recording calls `onStop`.
+/// Floating status pill at the bottom of the screen. While recording, clicking it calls `onStop` and its
+/// cancel button calls `onCancel`.
 /// Recorder excludes this app's windows from capture.
 @MainActor
 final class Overlay {
@@ -12,11 +13,12 @@ final class Overlay {
     }
 
     private let model = OverlayModel()
+    private var hintTask: Task<Void, Never>?
     private let panel = NSPanel(
-        contentRect: NSRect(x: 0, y: 0, width: 200, height: 44), styleMask: [.borderless, .nonactivatingPanel],
+        contentRect: NSRect(x: 0, y: 0, width: 220, height: 80), styleMask: [.borderless, .nonactivatingPanel],
         backing: .buffered, defer: false)
 
-    init(onStop: @escaping () -> Void) {
+    init(onStop: @escaping () -> Void, onCancel: @escaping () -> Void) {
         panel.isOpaque = false
         panel.backgroundColor = .clear
         panel.hasShadow = false
@@ -24,11 +26,13 @@ final class Overlay {
         panel.level = .statusBar
         panel.ignoresMouseEvents = true
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary]
-        panel.contentView = FirstClickHostingView(rootView: OverlayView(model: model, onStop: onStop))
+        panel.contentView = FirstClickHostingView(
+            rootView: OverlayView(model: model, onStop: onStop, onCancel: onCancel))
     }
 
     func show(_ phase: Phase) {
         model.phase = phase
+        model.hint = nil
         if case .recording = phase {
             panel.ignoresMouseEvents = false
         } else {
@@ -44,7 +48,18 @@ final class Overlay {
     }
 
     func hide() {
+        model.hint = nil
         panel.orderOut(nil)
+    }
+
+    /// Shows `hint` above the pill for `seconds`.
+    func flash(_ hint: String, for seconds: Double) {
+        model.hint = hint
+        hintTask?.cancel()
+        hintTask = Task {
+            try? await Task.sleep(for: .seconds(seconds))
+            if !Task.isCancelled { model.hint = nil }
+        }
     }
 }
 
@@ -57,14 +72,33 @@ private final class FirstClickHostingView<Content: View>: NSHostingView<Content>
 @Observable
 private final class OverlayModel {
     var phase = Overlay.Phase.processing
+    var hint: String?
 }
 
 private struct OverlayView: View {
     let model: OverlayModel
     let onStop: () -> Void
+    let onCancel: () -> Void
     @State private var hovering = false
 
     var body: some View {
+        VStack(spacing: 6) {
+            if let hint = model.hint {
+                Text(hint)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 4)
+                    .background(.black.opacity(0.85), in: Capsule())
+                    .transition(.opacity)
+            }
+            pill
+        }
+        .animation(.easeOut(duration: 0.15), value: model.hint)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+    }
+
+    private var pill: some View {
         HStack(spacing: 10) {
             switch model.phase {
             case .recording(let since, let level):
@@ -84,6 +118,11 @@ private struct OverlayView: View {
                                 .time(pattern: .minuteSecond))
                         )
                         .monospacedDigit()
+                        Button(action: onCancel) {
+                            Image(systemName: "xmark.circle.fill").foregroundStyle(.white.opacity(0.7))
+                        }
+                        .buttonStyle(.plain)
+                        .help("Cancel recording")
                     }
                 }
             case .processing:
@@ -105,6 +144,5 @@ private struct OverlayView: View {
             if case .recording = model.phase { onStop() }
         }
         .help("Stop recording")
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }

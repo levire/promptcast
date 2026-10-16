@@ -5,10 +5,23 @@ import PromptCastCore
 enum Preferences {
     static let localeKey = "locale"
     static let shortcutKey = "shortcut"
+    static let cancelKeyKey = "cancelKey"
+    static let cancelTwiceKey = "cancelTwice"
+    static let defaultCancelKey = CancelKey.escape
+    static let defaultCancelTwice = true
 
     /// BCP 47 transcription language, or empty for the system language.
     static var locale: String {
         UserDefaults.standard.string(forKey: localeKey) ?? ""
+    }
+
+    static var cancelKey: CancelKey {
+        (UserDefaults.standard.object(forKey: cancelKeyKey) as? Int).flatMap(CancelKey.init) ?? defaultCancelKey
+    }
+
+    /// Whether the cancel key must be pressed twice quickly.
+    static var cancelTwice: Bool {
+        UserDefaults.standard.object(forKey: cancelTwiceKey) as? Bool ?? defaultCancelTwice
     }
 
     static var shortcut: Shortcut {

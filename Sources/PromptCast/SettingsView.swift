@@ -6,12 +6,21 @@ import SwiftUI
 /// Settings window content. Add new settings as rows in a section, or as a new section.
 struct SettingsView: View {
     @AppStorage(Preferences.localeKey) private var locale = ""
+    @AppStorage(Preferences.cancelKeyKey) private var cancelKey = Preferences.defaultCancelKey
+    @AppStorage(Preferences.cancelTwiceKey) private var cancelTwice = Preferences.defaultCancelTwice
     @State private var locales: [String] = []
 
     var body: some View {
         Form {
             Section("Recording") {
                 LabeledContent("Start / stop shortcut") { ShortcutRecorder() }
+                Picker("Cancel key", selection: $cancelKey) {
+                    ForEach(CancelKey.allCases, id: \.self) { Text($0.label).tag($0) }
+                }
+                Picker("Cancel with", selection: $cancelTwice) {
+                    Text("Double press").tag(true)
+                    Text("Single press").tag(false)
+                }
             }
             Section("Transcription") {
                 Picker("Language", selection: $locale) {
