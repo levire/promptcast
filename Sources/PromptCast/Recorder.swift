@@ -100,18 +100,23 @@ final class Recorder: NSObject, SCRecordingOutputDelegate {
         audio?.stop()
         if let stream, let recording {
             // Removing the output finalizes video.mov; stopCapture alone does not reliably report completion.
-            try await withCheckedThrowingContinuation { continuation in
-                finished = continuation
-                do {
-                    try stream.removeRecordingOutput(recording)
-                } catch {
-                    finish(error)
+            do {
+                try await withCheckedThrowingContinuation { continuation in
+                    finished = continuation
+                    do {
+                        try stream.removeRecordingOutput(recording)
+                    } catch {
+                        finish(error)
+                    }
+                    Task {
+                        try? await Task.sleep(for: .seconds(5))
+                        if self.finished != nil { log.error("No recording-finished callback after 5s, continuing") }
+                        self.finish(nil)
+                    }
                 }
-                Task {
-                    try? await Task.sleep(for: .seconds(5))
-                    if self.finished != nil { log.error("No recording-finished callback after 5s, continuing") }
-                    self.finish(nil)
-                }
+            } catch {
+                try? await stream.stopCapture()
+                throw error
             }
             try? await stream.stopCapture()
         }

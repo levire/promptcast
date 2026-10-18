@@ -1,6 +1,6 @@
 APP := build/PromptCast.app
 
-.PHONY: build test e2e lint format check app run clean
+.PHONY: build test e2e lint format check mutate app run clean
 
 # Every target depends on build, so the committed hooks activate on first use without a setup step.
 build:
@@ -25,6 +25,11 @@ format:
 
 # Everything an agent must pass before calling a change done.
 check: lint build test e2e
+
+# Mutation testing of Core with Muter (brew install muter-mutation-testing/formulae/muter). Not part of check.
+mutate: build
+	muter run --skip-update-check --skip-coverage --format plain \
+		$(addprefix --files-to-mutate ,$(wildcard Sources/PromptCastCore/*.swift))
 
 # Signs with the first Apple Development identity so macOS keeps granted permissions across rebuilds; ad-hoc otherwise.
 SIGN_ID ?= $(shell security find-identity -p codesigning -v | awk '/Apple Development/ {print $$2; exit}')

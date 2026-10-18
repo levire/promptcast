@@ -1,0 +1,13 @@
+# Muter runs the tests in a copy at ../PromptCast_mutated with an empty PATH, so PATH is set for codesign, and the
+# build goes to its own scratch path because the copied .build cache points at the original folder.
+arguments:
+- PATH=/usr/bin:/bin:/usr/sbin:/sbin
+- swift
+- test
+- --scratch-path
+- .build/muter
+executable: /usr/bin/env
+exclude:
+- Package.swift
+- Tests
+excludeCalls: []

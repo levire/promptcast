@@ -33,13 +33,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     private var state = State.idle
     private var lastReport: URL?
-    private lazy var overlay = Overlay { [weak self] in self?.toggle() }
+    private lazy var overlay = Overlay(
+        onStop: { [weak self] in self?.toggle() }, onCancel: { [weak self] in self?.cancel() })
+    private var cancelItem: NSMenuItem?
+    private var cancelTap: EventTap?
     private var settingsWindow: NSWindow?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         item.button?.title = "◎"
         let menu = NSMenu()
         menu.addItem(withTitle: "Start / Stop", action: #selector(toggle), keyEquivalent: "")
+        cancelItem = menu.addItem(
+            withTitle: "Cancel Recording", action: #selector(cancel), keyEquivalent: "")
         menu.addItem(withTitle: "Open Last Report", action: #selector(openLast), keyEquivalent: "")
         menu.addItem(withTitle: "Open Recordings Folder", action: #selector(openRoot), keyEquivalent: "")
         menu.addItem(.separator())
@@ -54,6 +59,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     func menuNeedsUpdate(_ menu: NSMenu) {
         menu.items.first?.title = "Start / Stop  (\(Preferences.shortcut.label))"
+        if case .recording = state { cancelItem?.isHidden = false } else { cancelItem?.isHidden = true }
+        let key = Preferences.cancelKey.label
+        cancelItem?.title = "Cancel Recording  (\(Preferences.cancelTwice ? "\(key) \(key)" : key))"
     }
 
     @objc func toggle() {
@@ -74,12 +82,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 state = .recording(recorder)
                 item.button?.title = "● REC"
                 overlay.show(.recording(since: Date(), level: { recorder.level }))
+                watchCancelKey()
             } catch {
                 try? FileManager.default.removeItem(at: dir)
                 fail(error)
             }
         case .recording(let recorder):
             state = .busy
+            cancelTap = nil
             item.button?.title = "…"
             overlay.show(.processing)
             do {
@@ -100,6 +110,43 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 fail(error)
             }
         }
+    }
+
+    /// Stops the current recording and deletes its folder without writing a report.
+    @objc func cancel() {
+        guard case .recording(let recorder) = state else { return }
+        state = .busy
+        cancelTap = nil
+        Task {
+            do {
+                try await recorder.stop()
+                try FileManager.default.removeItem(at: recorder.dir)
+                log.info("Recording cancelled")
+            } catch {
+                log.error("Cancelling failed: \(error.localizedDescription, privacy: .public)")
+            }
+            state = .idle
+            item.button?.title = "◎"
+            overlay.hide()
+        }
+    }
+
+    private func watchCancelKey() {
+        let key = Preferences.cancelKey
+        var trigger = CancelTrigger(twice: Preferences.cancelTwice)
+        cancelTap = EventTap(events: [.keyDown]) { [weak self] _, event in
+            guard event.getIntegerValueField(.keyboardEventAutorepeat) == 0,
+                let pressed = NSEvent(cgEvent: event).map(Shortcut.init(event:)),
+                pressed.keyCode == key.keyCode, pressed.modifiers == key.modifiers
+            else { return }
+            switch trigger.press(at: ProcessInfo.processInfo.systemUptime) {
+            case .cancel:
+                self?.cancel()
+            case .pressAgain:
+                self?.overlay.flash("Press \(key.label) again to cancel", for: CancelTrigger.maxInterval)
+            }
+        }
+        if cancelTap == nil { log.error("The cancel key needs Input Monitoring permission, then a relaunch") }
     }
 
     private func fail(_ error: Error) {

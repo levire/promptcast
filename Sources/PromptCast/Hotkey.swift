@@ -9,8 +9,7 @@ enum Hotkey {
     static var action: (() -> Void)?
     private static var ref: EventHotKeyRef?
     private static var handlerInstalled = false
-    private static var tap: CFMachPort?
-    private static var tapSource: CFRunLoopSource?
+    private static var tap: EventTap?
     private static var tapState = ModifierTap()
     private static var tapKeyCode = 0
 
@@ -36,10 +35,7 @@ enum Hotkey {
     static func unregister() {
         if let ref { UnregisterEventHotKey(ref) }
         ref = nil
-        if let tap { CGEvent.tapEnable(tap: tap, enable: false) }
-        if let tapSource { CFRunLoopRemoveSource(CFRunLoopGetMain(), tapSource, .commonModes) }
         tap = nil
-        tapSource = nil
     }
 
     private static func registerCarbon(_ shortcut: Shortcut) -> String? {
@@ -60,24 +56,11 @@ enum Hotkey {
     }
 
     private static func registerTap(_ shortcut: Shortcut) -> String? {
-        let types: [CGEventType] = [.flagsChanged, .keyDown, .leftMouseDown, .rightMouseDown, .otherMouseDown]
-        let mask = types.reduce(CGEventMask(0)) { $0 | (1 << $1.rawValue) }
-        // macOS applies a new Input Monitoring grant only after the app relaunches.
-        guard
-            let tap = CGEvent.tapCreate(
-                tap: .cgSessionEventTap, place: .headInsertEventTap, options: .listenOnly, eventsOfInterest: mask,
-                callback: { _, type, event, _ in
-                    MainActor.assumeIsolated { Hotkey.handle(type, event) }
-                    return Unmanaged.passUnretained(event)
-                }, userInfo: nil)
-        else {
-            CGRequestListenEventAccess()
+        tap = EventTap(
+            events: [.flagsChanged, .keyDown, .leftMouseDown, .rightMouseDown, .otherMouseDown], handler: handle)
+        guard tap != nil else {
             return "Allow PromptCast in Privacy & Security > Input Monitoring, then quit and reopen PromptCast"
         }
-        let source = CFMachPortCreateRunLoopSource(nil, tap, 0)
-        CFRunLoopAddSource(CFRunLoopGetMain(), source, .commonModes)
-        self.tap = tap
-        tapSource = source
         tapKeyCode = shortcut.keyCode
         tapState = ModifierTap()
         return nil
@@ -90,8 +73,6 @@ enum Hotkey {
             let tapped = tapState.flagsChanged(
                 keyCode: keyCode, flags: event.flags.rawValue, time: ProcessInfo.processInfo.systemUptime)
             if tapped == tapKeyCode { action?() }
-        case .tapDisabledByTimeout, .tapDisabledByUserInput:
-            if let tap { CGEvent.tapEnable(tap: tap, enable: true) }
         default:
             tapState.interrupt()
         }
